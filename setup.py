@@ -6,13 +6,13 @@ with open('README.md', encoding='utf-8') as f:
     long_description = f.read()
 
 setuptools.setup(
-    name='JsMeetsStarlette',
+    name='pynexumjs',
     version='0.0.0',
     description=SHORT_DISCRIPTION,
     long_description=long_description,
     long_description_content_type='text/markdown',
-    author='meloncookie',
-    author_email='',
+    author='Malek Ali',
+    author_email='malek.ali@yellow-sic.com',
     license='MIT',
     url='https://github.com/meloncookie/JsMeetsStarlette',
     install_requires=[],
