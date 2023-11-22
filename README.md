@@ -38,6 +38,8 @@ Connect Python to JavaScript Bidirectional
 pip install pynexumjs
 
 ```
+
+<p>index.html</p>
 ```html
 
 <!DOCTYPE html>
@@ -161,7 +163,7 @@ pip install pynexumjs
 </html>
 ```
 
-
+<p>main.py</p>
 
 ```python
 
