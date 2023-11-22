@@ -1,26 +1,5 @@
 /*
-JsPyBinarySocket.js
 
-Overview
-----------
-Used in combination with Python library 'JsMeetsStarlette'.
-'JsMeetsStarlette' is a web server framework.
-
-'JsPyBinarySocket.js' is the basic library that communicates with the server on the browser side.
-Controls sending and receiving of binary data on websocket.
-
-License
-----------
-This software is released under the MIT License.
-Copyright (c) 2020 meloncookie
-
-Version
-----------
-0.0.0   2020.09.10
-
-Requirements
-----------
-ES2017
 */
 class JsPyBinarySocket{
     /**
