@@ -38,7 +38,128 @@ Connect Python to JavaScript Bidirectional
 pip install pynexumjs
 
 ```
+```Html
 
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>PyNexumJS</title>
+
+  <link href="https://cdn.jsdelivr.net/npm/daisyui@2.31.0/dist/full.css" rel="stylesheet" type="text/css">
+  <script src="https://cdn.tailwindcss.com?plugins=forms,typography,aspect-ratio,line-clamp"></script>
+
+  <script src="https://cdn.jsdelivr.net/npm/daisyui@2.31.0/dist/full.js"></script>
+
+  <link rel="icon" type="image/x-icon" href="http://localhost:8000/favicon.ico">
+  <script src="/PySocket.js"></script>
+  <script src="/JsPyFunction.js"></script>
+</head>
+<body>
+    <div class="d-flex flex-column w-full">
+      <header class="bg-primary text-white">
+        <h1>PyNexumJS</h1>
+      </header>
+  
+      <main class="content">
+        <div class="card">
+          <h2>Call python function</h2>
+  
+          <h3>Behavior of python function</h3>
+          The operation is the same for both "normal_call" and "exclusive_call".
+  
+          <ul>
+            <li>Print entry message with call ID on the server console.</li>
+            <li>async sleep for 10 second.</li>
+            <li>Print exit message with call ID on the server console.</li>
+          </ul>
+  
+          When "normal" calls, it immediately executes.
+          <br>When "exclusive" calls, it will be accepted later
+          if it is running in another process.
+          <br>Press the button multiple times and look at the server console.
+          <br>Notice the difference between "normal" and "exclusive".<br><br>
+  
+          <em>Next call ID: <span id="call_id">1</span></em><br>
+          <button type="button" class="btn btn-primary" id="normal_call">Call normal</button><br>
+          <button type="button" class="btn btn-outline" id="exclusive_call">Call exclusive</button>
+        </div>
+  
+        <div class="card">
+          <h2>Get function return from python</h2>
+  
+          <div class="mb-3">
+            <label for="key_name">Key name of function:</label>
+            <input type="text" value="" width="30" id="key_name" placeholder="py_sum"><br>
+          </div>
+  
+          <div class="mb-3">
+            <label for="args">List of variable length arguments(JSON):</label>
+            <input type="text" value="" width="30" id="args" placeholder="[12, 10, 9]"><br>
+          </div>
+  
+          <button type="button" class="btn btn-primary" id="command_run">Call</button><br><br>
+          <span id="command_ack"></span>
+        </div>
+      </main>
+  
+
+  <script>
+    let call_id = 1;
+    let normal_id = document.querySelector("#call_id");
+    let normal_call = document.querySelector("#normal_call");
+    let exclusive_call = document.querySelector("#exclusive_call");
+
+    normal_call.addEventListener("click", (event) => {
+        JsPyFunction.call_nowait("py_normal")(call_id);
+        normal_id.innerText = ++call_id;
+    });
+    exclusive_call.addEventListener("click", (event) => {
+        JsPyFunction.call_nowait("py_exclusive")(call_id);
+        normal_id.innerText = ++call_id;
+    });
+
+    let key_name = document.querySelector("#key_name");
+    let args = document.querySelector("#args");
+    let command_run = document.querySelector("#command_run");
+    let command_ack = document.querySelector("#command_ack");
+
+    command_run.addEventListener("click", async function (event){
+        try{
+            let params = JSON.parse(args.value);
+            let val = await JsPyFunction.call(key_name.value, 20)(...params);
+            command_ack.innerText = val;
+        }
+        catch(e){
+            command_ack.innerText = e.message;
+        }
+    });
+
+    // Callback function when websocket is closed
+    function disable_button(){
+        normal_call.disabled = true;
+        exclusive_call.disabled = true;
+        command_run.disabled = true;
+    }
+    // Register the callback function when websocket is closed
+    JsPyTextSocket.add_close_event(disable_button);
+
+    // Example: javascript exposed function
+    function js_sum(a,b,c){
+        if(a<0 || b<0 || c<0){
+            throw new Error("Error: Nagative argument");
+        }
+        return(a+b+c);
+    }
+    // Expose for the server
+    JsPyFunction.expose("js_sum", js_sum);
+</script>
+</body>
+<footer class="bg-light text-dark">
+    <p>Copyright &copy; 2023</p>
+  </footer>
+</html>
+```
 
 
 
