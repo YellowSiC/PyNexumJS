@@ -14,7 +14,7 @@ setuptools.setup(
     author='Malek Ali',
     author_email='malek.ali@yellow-sic.com',
     license='MIT',
-    url='https://github.com/meloncookie/JsMeetsStarlette',
+    url='https://github.com/YellowSiC/PyNexumJS/',
     install_requires=[],
     extras_require={
         "full": [
