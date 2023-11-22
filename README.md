@@ -38,7 +38,23 @@ Connect Python to JavaScript Bidirectional
 pip install pynexumjs
 
 ```
+```plaintext
 
+
+project_name/
+│
+├── static/
+│   ├── main.js
+├── templates/
+│   ├── index.html
+├── .env
+├── .gitignore
+├── main.py
+├── requirements.txt
+
+
+
+```
 ### index.html
 ```html
 
