@@ -279,8 +279,8 @@ def print_socket_event(id: int, event: str):
     print(f'Socket {id}: {event}')
 WebSocketManager.add_socket_event(print_socket_event)
 
-@app.route('/call_nowait', ['GET'])
-def page_call_nowait(request):
+@app.get('/call_nowait')
+def page_call_nowait(request:Request):
     if 'key' in request.query_params and\
        'args' in request.query_params:
         key = request.query_params['key']
@@ -288,14 +288,19 @@ def page_call_nowait(request):
         call_nowait(key)(*param)
         return PlainTextResponse('OK')
 
-@app.route('/call', ['GET'])
-async def page_call(request):
+@app.get('/call')
+async def page_call(request:Request):
     if 'key' in request.query_params and\
        'args' in request.query_params:
         key = request.query_params['key']
         param = json.loads(request.query_params['args'])
         ret = await call(key)(*param)
         return PlainTextResponse(json.dumps(ret))
+
+
+if __name__ == '__main__':
+    import uvicorn
+    uvicorn.run('main:app', reload=True)
    
 ```
 ### In November 2023, PyNexumJS was just publicly released by software architecture Malek Ali at Yellow-SiC Group and is in alpha stage.
