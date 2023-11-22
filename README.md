@@ -41,16 +41,15 @@ pip install pynexumjs
 ```plaintext
 
 
-project_name/
+project_folder_struktur/
 │
 ├── static/
 │   ├── main.js
 ├── templates/
 │   ├── index.html
-├── .env
-├── .gitignore
+├── .venv
 ├── main.py
-├── requirements.txt
+
 
 
 
