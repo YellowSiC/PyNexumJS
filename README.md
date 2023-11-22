@@ -320,7 +320,7 @@ if __name__ == '__main__':
    
 ```
 ### In November 2023, PyNexumJS was just publicly released by software architecture Malek Ali at Yellow-SiC Group and is in alpha stage.
-<p>Anyone can install and use Hybrid. There may be issues, but we are actively working to resolve them</p>
+<p>Anyone can install and use PyNexumJS, There may be issues, but we are actively working to resolve them</p>
 
 
 ## 🤝 Contributing [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg?style=flat-square)](http://makeapullrequest.com)
