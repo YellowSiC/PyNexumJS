@@ -39,7 +39,7 @@ pip install pynexumjs
 
 ```
 
-<p>index.html</p>
+### index.html
 ```html
 
 <!DOCTYPE html>
@@ -163,7 +163,7 @@ pip install pynexumjs
 </html>
 ```
 
-<p>main.py</p>
+### main.py
 
 ```python
 
