@@ -188,11 +188,12 @@ from pynexumjs import (
     BrowserModule,
     JsPyBinarySocket
     )
-from fastapi import FastAPI, Request, WebSocket
+from fastapi import FastAPI, Request
 from fastapi.responses import HTMLResponse, PlainTextResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
-import json, asyncio
+import json
+import asyncio
 
 
 
