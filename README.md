@@ -13,7 +13,7 @@ Connect Python to JavaScript Bidirectional
 <div align="center">
   <p>
     With PyNexumJS, you can seamlessly call Python functions from JavaScript and vice versa. 
-    Send arbitrary data from JavaScript to the Python side, and vice versa, enabling real-time bidirectional communication without the need for Ajax.
+    Send arbitrary data from JavaScript to the Python side, and vice versa, enabling real-time bidirectional communication via Websocket without the need for Ajax.
   </p>
 
   <p>
