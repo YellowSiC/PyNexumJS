@@ -1,160 +1,214 @@
-import os
-import subprocess as subsystem
-import sys
-from typing import List, Optional
+import os, sys
+import time
+import signal
+import psutil
+import tempfile
 import platform
+import subprocess
+import socketserver
+import multiprocessing
+import webbrowser
+from multiprocessing import Process
+from threading import Thread
+from dataclasses import dataclass
+from typing import Callable, Any, List, Union, Dict
 
-OptionsDictT = dict[str, any]
+OPERATING_SYSTEM = platform.system().lower()
 
+PY = "python3" if OPERATING_SYSTEM in ["linux", "darwin"] else "python"
 
-class BrowserModule:
-    name: str = 'Google Chrome/Chromium'
+def get_free_port():
+    with socketserver.TCPServer(("localhost", 0), None) as s:
+        free_port = s.server_address[1]
+    return free_port
+
+def kill_port(port: int):
+    for proc in psutil.process_iter():
+        try:
+            for conns in proc.connections(kind="inet"):
+                if conns.laddr.port == port:
+                    proc.send_signal(signal.SIGTERM)
+        except psutil.AccessDenied:
+            continue
+
+def linuxs_browser():
+    paths = [
+        "/usr/bin/google-chrome",
+        "/usr/bin/microsoft-edge-stable",
+        "/usr/bin/microsoft-edge",
+        "/usr/bin/brave-browser",
+    ]
+    for path in paths:
+        if os.path.exists(path):
+            return path
+
+    for path in paths:
+        bp = (
+            subprocess.check_output(["which", path.split("/")[-1]])
+            .decode("utf-8")
+            .strip()
+        )
+        if os.path.exists(bp):
+            return bp
+
+    return None
+
+def mac_browser():
+    paths = [
+        "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome",
+        "/Applications/Brave Browser.app/Contents/MacOS/Brave Browser",
+        "/Applications/Microsoft Edge.app/Contents/MacOS/Microsoft Edge",
+        "/Applications/Safari.app/Contents/MacOS/Safari"
+    ]
+    for path in paths:
+        if os.path.exists(path):
+            return path
+    return None
+
+def windows_browser():
+    paths = [
+        r"C:\Program Files (x86)\Microsoft\Edge\Application\msedge.exe",
+        r"C:\Program Files\Microsoft\Edge\Application\msedge.exe",
+        r"C:\Program Files\Google\Chrome\Application\chrome.exe",
+        r"C:\Program Files\BraveSoftware\Brave-Browser\Application\brave.exe",
+    ]
+    for path in paths:
+        if os.path.exists(path):
+            return path
     
+    return None
+
+def find_browser():
+    if OPERATING_SYSTEM == "windows":
+        return windows_browser()
+    if OPERATING_SYSTEM == "linux":
+        return linuxs_browser()
+    if OPERATING_SYSTEM == "darwin":
+        return mac_browser()
+    return None
+
+class BaseDefaultServer:
+    server: Callable
+    get_server_kwargs: Callable
+
+class FastApi_Server:
     @staticmethod
-    def run(path: str, options: dict, start_urls: List[str], window_size: Optional[List[int]] = None) -> None:
-        if not isinstance(options['cmdline_args'], list):
-            raise TypeError("'cmdline_args' option must be of type List[str]")
-        if options['app_mode']:
-            for url in start_urls:
-                subsystem.Popen([path, '--app=%s' % url] +
-                        options['cmdline_args'],
-                        stdout=subsystem.PIPE, stderr=subsystem.PIPE, stdin=subsystem.PIPE)
-                        
-        
-   
+    def get_server_kwargs(**kwargs):
+        server_kwargs = {"app": kwargs.get("app"), "port": kwargs.get("port")}
+        return server_kwargs
+
+    @staticmethod
+    def server(app, port, reload):
+        import uvicorn
+        uvicorn.run(app, port=port, reload=reload)
+
+
+
+webserver_dispacher: Dict[str, BaseDefaultServer] = {
+    "fastapi": FastApi_Server,
+}
+
+@dataclass
+class Application:
+    server: Union[str, Callable[[Any], None]]
+    server_kwargs: dict = None
+    app: Any = None
+    view:str = None
+    reload: bool = None
+    port: int = None
+    width: int = None
+    height: int = None
+    fullscreen: bool = True
+    on_startup: Callable = None
+    on_shutdown: Callable = None
+    browser_path: str = None
+    browser_command: List[str] = None
+    socketio: Any = None
+
+    def __post_init__(self):
+        self.__keyboard_interrupt = False
+
+        if self.port is None:
+            self.port = (
+                self.server_kwargs.get("port")
+                if self.server_kwargs
+                else get_free_port()
+            )
+
+        if isinstance(self.server, str):
+            default_server = webserver_dispacher[self.server]
+            self.server = default_server.server
+            self.server_kwargs = self.server_kwargs or default_server.get_server_kwargs(
+                app=self.app, port=self.port, flask_socketio=self.socketio
+            )
+
+        self.profile_dir = os.path.join(tempfile.gettempdir(), "application")
+        self.url = f"http://localhost:{self.port}"
+        self.browser_path = self.browser_path or find_browser()
+        self.browser_command = self.browser_command or self.get_browser_command()
+
+        if not self.browser_path:
+            print("path to chrome not found")
+            self.browser_command = [PY, "-m", "webbrowser", "-n", self.url]
+
+    def get_browser_command(self):
+        flags = [
+            self.browser_path,
+            f"--user-data-dir={self.profile_dir}",
+            "--new-window",
+            "--no-first-run",
+        ]
+
+        if self.width and self.height:
+            flags.extend([f"--window-size={self.width},{self.height}"])
+        elif self.fullscreen:
+            flags.extend(["--start-maximized"])
+
+        flags.extend([f"--app={self.url}"])
+
+        return flags
+
+    def start_native_browser(self, server_process: Union[Thread, Process]):
+        print("Command:", " ".join(self.browser_command))
+        subprocess.run(self.browser_command)
+
+        if self.browser_path is None:
+            while self.__keyboard_interrupt is False:
+                time.sleep(1)
+
+        if isinstance(server_process, Process):
+            server_process.kill()
         else:
-            args: List[str] = options['cmdline_args'] + start_urls
-            if window_size is not None:
-                args += ['--window-size=%s,%s' % (window_size[0], window_size[1])]
-            subsystem.Popen([path, '--new-window'] + args,
-                    stdout=subsystem.PIPE, stderr=sys.stderr, stdin=subsystem.PIPE)
-            
-    @staticmethod
-    def find_path() -> Optional[str]:
-        if sys.platform in ['win32', 'win64']:
-            return BrowserModule._find_chrome_win()
-        elif sys.platform == 'darwin':
-            return BrowserModule._find_chrome_mac() or BrowserModule._find_chromium_mac()
-        elif sys.platform.startswith('linux'):
-            return BrowserModule._find_chrome_linux()
-        else:
-            return None
+            kill_port(self.port)
+    
+    def start_normal_browser(self):
+       webbrowser.open(self.url)
 
-    @staticmethod
-    def _find_chrome_mac() -> Optional[str]:
-        default_dir = r'/Applications/Google Chrome.app/Contents/MacOS/Google Chrome'
-        if os.path.exists(default_dir):
-            return default_dir
-        # use mdfind ci to locate Chrome in alternate locations and return the first one
-        name = 'Google Chrome.app'
-        alternate_dirs = [x for x in subsystem.check_output(["mdfind", name]).decode().split('\n') if x.endswith(name)]
-        if len(alternate_dirs):
-            return alternate_dirs[0] + '/Contents/MacOS/Google Chrome'
-        return None
 
-    @staticmethod
-    def _find_chromium_mac() -> Optional[str]:
-        default_dir = r'/Applications/Chromium.app/Contents/MacOS/Chromium'
-        if os.path.exists(default_dir):
-            return default_dir
-        # use mdfind ci to locate Chromium in alternate locations and return the first one
-        name = 'Chromium.app'
-        alternate_dirs = [x for x in subsystem.check_output(["mdfind", name]).decode().split('\n') if x.endswith(name)]
-        if len(alternate_dirs):
-            return alternate_dirs[0] + '/Contents/MacOS/Chromium'
-        return None
+    def run(self):
+            if self.on_startup is not None:
+                self.on_startup()
 
-    @staticmethod
-    def _find_chrome_linux() -> Optional[str]:
-        import whichcraft as wch
-        chrome_names = ['chromium-browser',
-                        'chromium',
-                        'google-chrome',
-                        'google-chrome-stable']
-
-        for name in chrome_names:
-            chrome = wch.which(name)
-            if chrome is not None:
-                return chrome # type: ignore # whichcraft doesn't currently have type hints
-        return None
-
-    @staticmethod
-    def _find_chrome_win() -> Optional[str]:
-        import winreg as reg
-        reg_path = r'SOFTWARE\Microsoft\Windows\CurrentVersion\App Paths\chrome.exe'
-        chrome_path: Optional[str] = None
-
-        for install_type in reg.HKEY_CURRENT_USER, reg.HKEY_LOCAL_MACHINE:
-            try:
-                reg_key = reg.OpenKey(install_type, reg_path, 0, reg.KEY_READ)
-                chrome_path = reg.QueryValue(reg_key, None)
-                reg_key.Close()
-                if not os.path.isfile(chrome_path):
-                    continue
-            except Exception:
-                chrome_path = None
+            if OPERATING_SYSTEM == "darwin":
+                multiprocessing.set_start_method("fork")
+                server_process = Process(target=self.server, args=(self.app, self.port, self.reload))
             else:
-                break
+                server_process = Thread(target=self.server, args=(self.app, self.port, self.reload))
 
-        return chrome_path
-    
-    @staticmethod
-    def browser_open(
-        title: str = None,
-        url: Optional[str] = None,
-        view: Optional[str]=None,
-        width: int = None,
-        height: int = None,
-        fullscreen: bool = None,
-        dark_mode: bool = None,
-    ):
-        if view =='app':
-            browser_path = BrowserModule.find_path()
+            if self.view == 'APP':
+                browser_thread = Thread(target=self.start_native_browser, args=(server_process,))
+            elif self.view == 'WEB':
+                browser_thread = Thread(target=self.start_normal_browser)
+            else:
+                raise ValueError("Invalid value for 'view'. Use 'native' or 'web'.")
 
-            flags = [
-                "--no-first-run",
-               "--Web-App-Manifest-Icons=Enabled",
-               "--Smooth-Scrolling=Enabled"#Disabled
-                f"--app-name={title}"
-                ]
-            if width and height:
-                flags.extend([f"--window-size={width},{height}"])
-                options = {'cmdline_args': flags, 'app_mode': True}
-            if fullscreen:
-                flags.extend(["--start-maximized", '--kiosk'])
-                options = {'cmdline_args': flags, 'app_mode': True}
-            
-            if dark_mode:
-                flags.extend(["enable-force-dark=Enabled"])
-                options = {'cmdline_args': flags, 'app_mode': True}
+            try:
+                server_process.start()
+                browser_thread.start()
+                server_process.join()
+                browser_thread.join()
+            except KeyboardInterrupt:
+                sys.exit(0)
 
-    
-
-            if browser_path is not None:
-                    
-                BrowserModule.run(browser_path, options, [url])
-        else:
-            import webbrowser
-            webbrowser.open(url=url)
-
-
-#def open_braowser(url):
-    #BrowserModule.browser_open(url=url, dark_mode=True, width=600, height=600)
-
-
-#app = BrowserModule()
-
-
-#if __name__ == "__main__":
-    
-    #app.browser_open(view='app', url='https://example.com', height=800, width=600)
-
-    # # Öffne den Browser im Standardmodus mit der angegebenen URL
-
-    #BrowserModule.browser_open(url='https://example.com', dark_mode=True)
-
-    # # Öffne den Browser im Vollbildmodus
-    # BrowserModule.browser_open(url='https://example.com', fullscreen=True)
-
-    # # Öffne den Browser im App-Modus mit angegebener Größe und bestätige das Schließen
-    # BrowserModule.browser_open(view='app', url='https://example.com', width=800, height=600, confirm_close=True)
+            if self.on_shutdown is not None:
+                self.on_shutdown()
