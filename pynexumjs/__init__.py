@@ -28,7 +28,7 @@ from .import_sys import(
     clear_all, 
     remove, 
     remove_all,
-    BrowserModule,
+    Application,
     JsPyBinarySocket
 )
 
