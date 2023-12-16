@@ -58,6 +58,13 @@ from fastapi.dependencies.models import SecurityRequirement,Dependant
 from .import JsPyBackground
 from .JsPyBinarySocket import JsPyBinarySocket
 from .import_sys import(
+    BindableProperty, 
+    _has_attribute,
+    _get_attribute,
+    _set_attribute,
+    bind_to,
+    bind_from,
+    bind,
     WebSocketManager,
     expose, 
     callable, 
