@@ -24,7 +24,6 @@ class PyNexumJS(FastAPI):
         super().__init__(*args, **kwargs)
         for i in extended_sockets:
             self.add_socket(i)
-        self.add_middleware(CORSMiddleware, allow_origins=["*"])
         # Register routes
         self.add_api_routes()
         # Register event handlers
