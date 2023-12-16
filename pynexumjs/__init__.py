@@ -1,5 +1,8 @@
 from .socket_mennager import JsPyError
 from .core import PyNexumJS 
+from fastapi.staticfiles import StaticFiles
+from fastapi.templating import Jinja2Templates
+from fastapi.responses import UJSONResponse,ORJSONResponse, HTMLResponse,RedirectResponse,StreamingResponse,FileResponse,PlainTextResponse
 from fastapi import (
 BackgroundTasks,
 UploadFile,
@@ -153,6 +156,13 @@ __all__ = [
     'WSGIMiddleware',
     'SecurityRequirement',
     'Dependant',
+    'UJSONResponse',
+    'ORJSONResponse', 
+    'HTMLResponse',
+    'RedirectResponse',
+    'StreamingResponse',
+    'FileResponse',
+    'PlainTextResponse'
     
 ]
 
