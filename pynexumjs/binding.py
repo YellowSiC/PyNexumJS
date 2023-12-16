@@ -183,4 +183,4 @@ def reset() -> None:
     active_links.clear()
 
 
-JsPyBackground.register_function(refresh_loop)
+JsPyBackground.register_function(refresh_loop, [])
