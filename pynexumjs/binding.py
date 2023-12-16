@@ -4,7 +4,7 @@ from collections import defaultdict
 from collections.abc import Mapping
 from typing import Any, Callable, DefaultDict, Dict, Iterable, List, Optional, Set, Tuple, Type, Union
 import logging
-
+from . import JsPyBackground
 
 
 log: logging.Logger = logging.getLogger('pynexumjs')
@@ -181,3 +181,6 @@ def reset() -> None:
     bindings.clear()
     bindable_properties.clear()
     active_links.clear()
+
+
+JsPyBackground.register_function(refresh_loop)
