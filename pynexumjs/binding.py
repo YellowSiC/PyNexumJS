@@ -3,9 +3,11 @@ import time
 from collections import defaultdict
 from collections.abc import Mapping
 from typing import Any, Callable, DefaultDict, Dict, Iterable, List, Optional, Set, Tuple, Type, Union
+import logging
 
-from . import core
-from .logging import log
+
+
+log: logging.Logger = logging.getLogger('pynexumjs')
 
 MAX_PROPAGATION_TIME = 0.01
 
@@ -37,7 +39,7 @@ async def refresh_loop() -> None:
     """Refresh all bindings in an endless loop."""
     while True:
         _refresh_step()
-        await asyncio.sleep(core.app.config.binding_refresh_interval)
+        await asyncio.sleep(0.01)
 
 
 def _refresh_step() -> None:
