@@ -4,3 +4,4 @@ from .JsPyQueue import push_nowait, push, pop, shift, add_callback,clear_callbac
 from .electron import Application
 from .JsPyBinarySocket import JsPyBinarySocket
 from .socket_mennager import WebSocketManager
+from .binding import BindableProperty, _has_attribute,_get_attribute,_set_attribute,bind_to,bind_from,bind
